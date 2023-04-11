@@ -3,12 +3,10 @@
 
 import UIKit
 
-@available(iOS 11.0, *)
 public protocol CountryCodePickerDelegate: AnyObject {
     func countryCodePickerViewControllerDidPickCountry(_ country: CountryCodePickerViewController.Country)
 }
 
-@available(iOS 11.0, *)
 public class CountryCodePickerViewController: UITableViewController {
 
     lazy var searchController: UISearchController = {
@@ -99,13 +97,17 @@ public class CountryCodePickerViewController: UITableViewController {
 
         tableView.register(Cell.self, forCellReuseIdentifier: Cell.reuseIdentifier)
         searchController.searchResultsUpdater = self
-        searchController.obscuresBackgroundDuringPresentation = false
+        if #available(iOS 9.1, *) {
+            searchController.obscuresBackgroundDuringPresentation = false
+        }
         searchController.searchBar.backgroundColor = .clear
-      
         #if os(iOS) || os(macOS) || os(watchOS)
-        navigationItem.searchController = searchController
+        if #available(iOS 11.0, *) {
+            navigationItem.searchController = searchController
+        } else {
+            navigationItem.titleView = searchController.searchBar
+        }
         #endif
-
         definesPresentationContext = true
     }
 
@@ -130,15 +132,15 @@ public class CountryCodePickerViewController: UITableViewController {
     }
 
     func country(for indexPath: IndexPath) -> Country {
-        isFiltering ? filteredCountries[indexPath.row] : countries[indexPath.section][indexPath.row]
+        return isFiltering ? filteredCountries[indexPath.row] : countries[indexPath.section][indexPath.row]
     }
 
     public override func numberOfSections(in tableView: UITableView) -> Int {
-        isFiltering ? 1 : countries.count
+        return isFiltering ? 1 : countries.count
     }
 
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        isFiltering ? filteredCountries.count : countries[section].count
+        return isFiltering ? filteredCountries.count : countries[section].count
     }
 
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -192,15 +194,14 @@ public class CountryCodePickerViewController: UITableViewController {
     }
 }
 
-@available(iOS 11.0, *)
 extension CountryCodePickerViewController: UISearchResultsUpdating {
 
     var isFiltering: Bool {
-        searchController.isActive && !isSearchBarEmpty
+        return searchController.isActive && !isSearchBarEmpty
     }
 
     var isSearchBarEmpty: Bool {
-        searchController.searchBar.text?.isEmpty ?? true
+        return searchController.searchBar.text?.isEmpty ?? true
     }
 
     public func updateSearchResults(for searchController: UISearchController) {
@@ -217,7 +218,6 @@ extension CountryCodePickerViewController: UISearchResultsUpdating {
 
 // MARK: Types
 
-@available(iOS 11.0, *)
 public extension CountryCodePickerViewController {
 
     struct Country {
@@ -228,10 +228,15 @@ public extension CountryCodePickerViewController {
 
         public init?(for countryCode: String, with phoneNumberKit: PhoneNumberKit) {
             let flagBase = UnicodeScalar("🇦").value - UnicodeScalar("A").value
-            guard
-                let name = (Locale.current as NSLocale).localizedString(forCountryCode: countryCode),
-                let prefix = phoneNumberKit.countryCode(for: countryCode)?.description
-            else {
+            let localizedName: String?
+            
+            if #available(iOS 10.0, *) {
+                localizedName = (Locale.current as NSLocale).localizedString(forCountryCode: countryCode)
+            } else {
+                localizedName = (Locale.current as NSLocale).displayName(forKey: .countryCode, value: countryCode)
+            }
+            
+            guard let name = localizedName, let prefix = phoneNumberKit.countryCode(for: countryCode)?.description else {
                 return nil
             }
 
@@ -255,7 +260,7 @@ public extension CountryCodePickerViewController {
         static let reuseIdentifier = "Cell"
 
         override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-            super.init(style: .value2, reuseIdentifier: Self.reuseIdentifier)
+            super.init(style: .value2, reuseIdentifier: Cell.reuseIdentifier)
         }
 
         required init?(coder: NSCoder) {

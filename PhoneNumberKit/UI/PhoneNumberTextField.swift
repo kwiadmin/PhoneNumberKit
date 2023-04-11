@@ -91,7 +91,6 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         }
     }
 
-    #if compiler(>=5.1)
     /// Available on iOS 13 and above just.
     public var countryCodePlaceholderColor: UIColor = {
         if #available(iOS 13.0, tvOS 13.0, *) {
@@ -117,19 +116,17 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
             self.updatePlaceholder()
         }
     }
-    #endif
 
     private var _withDefaultPickerUI: Bool = false {
         didSet {
-            if #available(iOS 11.0, *), flagButton.actions(forTarget: self, forControlEvent: .touchUpInside) == nil {
+            if flagButton.actions(forTarget: self, forControlEvent: .touchUpInside) == nil {
                 flagButton.addTarget(self, action: #selector(didPressFlagButton), for: .touchUpInside)
             }
         }
     }
 
-    @available(iOS 11.0, *)
     public var withDefaultPickerUI: Bool {
-        get { _withDefaultPickerUI }
+        get { return _withDefaultPickerUI }
         set { _withDefaultPickerUI = newValue }
     }
     
@@ -294,7 +291,7 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
             .compactMap { UnicodeScalar(flagBase + $0.value)?.description }
             .joined()
 
-        self.flagButton.setTitle(flag + " ", for: .normal)
+        self.flagButton.setTitle(" " + flag + " ", for: .normal)
         self.flagButton.accessibilityLabel = NSLocalizedString(
             "PhoneNumberKit.CountryCodePickerEntryButton.AccessibilityLabel",
             value: "Select your country code",
@@ -312,7 +309,15 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
     }
 
     open func updatePlaceholder() {
-        guard self.withExamplePlaceholder else { return }
+        guard self.withExamplePlaceholder else {
+            if let placeholder = placeholder {
+                self.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: [
+                    .font: self.font ?? UIFont.preferredFont(forTextStyle: .body),
+                    .foregroundColor: self.numberPlaceholderColor
+                    ])
+            }
+            return
+        }
         if isEditing, !(self.text ?? "").isEmpty { return } // No need to update a placeholder while the placeholder isn't showing
 
         let format = self.withPrefix ? PhoneNumberFormat.international : .national
@@ -321,7 +326,7 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         let ph = NSMutableAttributedString(string: example, attributes: [.font: font])
 
         #if compiler(>=5.1)
-        if #available(iOS 13.0, *), self.withPrefix {
+        if self.withPrefix {
             // because the textfield will automatically handle insert & removal of the international prefix we make the
             // prefix darker to indicate non default behaviour to users, this behaviour currently only happens on iOS 13
             // and above just because that is where we have access to label colors
@@ -335,8 +340,7 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         self.attributedPlaceholder = ph
     }
 
-    @available(iOS 11.0, *)
-    @objc func didPressFlagButton() {
+    @objc open func didPressFlagButton() {
         guard withDefaultPickerUI else { return }
         let vc = CountryCodePickerViewController(phoneNumberKit: phoneNumberKit)
         vc.delegate = self
@@ -471,6 +475,7 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
             self.partialFormatter.defaultRegion = self.currentRegion
             self.updateFlag()
             self.updatePlaceholder()
+            self.undoManager?.removeAllActions()
         }
 
         return false
@@ -511,6 +516,7 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
     }
 
     open func textFieldShouldClear(_ textField: UITextField) -> Bool {
+        undoManager?.disableUndoRegistration()
         return self._delegate?.textFieldShouldClear?(textField) ?? true
     }
 
@@ -535,7 +541,6 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
     }
 }
 
-@available(iOS 11.0, *)
 extension PhoneNumberTextField: CountryCodePickerDelegate {
 
     public func countryCodePickerViewControllerDidPickCountry(_ country: CountryCodePickerViewController.Country) {

@@ -48,7 +48,7 @@ class PhoneNumberTextFieldTests: XCTestCase {
         tf.withFlag = true
         tf.text = "4125551212"
         XCTAssertNotNil(tf.flagButton)
-        XCTAssertEqual(tf.flagButton.titleLabel?.text, "🇺🇸 ")
+        XCTAssertEqual(tf.flagButton.titleLabel?.text, " 🇺🇸 ")
     }
 
     func testNonUSPhoneNumberWithFlag() {
@@ -58,7 +58,7 @@ class PhoneNumberTextFieldTests: XCTestCase {
         tf.withFlag = true
         tf.text = "5872170177"
         XCTAssertNotNil(tf.flagButton)
-        XCTAssertEqual(tf.flagButton.titleLabel?.text, "🇨🇦 ")
+        XCTAssertEqual(tf.flagButton.titleLabel?.text, " 🇨🇦 ")
     }
 }
 
