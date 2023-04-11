@@ -51,21 +51,23 @@ final class PhoneNumberTextFieldTests: XCTestCase {
     }
 
     func testUSPhoneNumberWithFlag() {
-        let textField = PhoneNumberTextField(withPhoneNumberKit: phoneNumberKit)
-        textField.partialFormatter.defaultRegion = "US"
-        textField.withFlag = true
-        textField.text = "4125551212"
-        XCTAssertNotNil(textField.flagButton)
-        XCTAssertEqual(textField.flagButton.titleLabel?.text, "🇺🇸 ")
+        let pnk = PhoneNumberKit()
+        let tf = PhoneNumberTextField(withPhoneNumberKit: pnk)
+        tf.partialFormatter.defaultRegion = "US"
+        tf.withFlag = true
+        tf.text = "4125551212"
+        XCTAssertNotNil(tf.flagButton)
+        XCTAssertEqual(tf.flagButton.titleLabel?.text, " 🇺🇸 ")
     }
 
     func testNonUSPhoneNumberWithFlag() {
-        let textField = PhoneNumberTextField(withPhoneNumberKit: phoneNumberKit)
-        textField.partialFormatter.defaultRegion = "US"
-        textField.withFlag = true
-        textField.text = "5872170177"
-        XCTAssertNotNil(textField.flagButton)
-        XCTAssertEqual(textField.flagButton.titleLabel?.text, "🇨🇦 ")
+        let pnk = PhoneNumberKit()
+        let tf = PhoneNumberTextField(withPhoneNumberKit: pnk)
+        tf.partialFormatter.defaultRegion = "US"
+        tf.withFlag = true
+        tf.text = "5872170177"
+        XCTAssertNotNil(tf.flagButton)
+        XCTAssertEqual(tf.flagButton.titleLabel?.text, " 🇨🇦 ")
     }
 }
 
