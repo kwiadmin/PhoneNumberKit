@@ -91,6 +91,7 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         }
     }
 
+    #if compiler(>=5.1)
     /// Available on iOS 13 and above just.
     public var countryCodePlaceholderColor: UIColor = {
         if #available(iOS 13.0, tvOS 13.0, *) {
@@ -116,17 +117,19 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
             self.updatePlaceholder()
         }
     }
+    #endif
 
     private var _withDefaultPickerUI: Bool = false {
         didSet {
-            if flagButton.actions(forTarget: self, forControlEvent: .touchUpInside) == nil {
+            if #available(iOS 11.0, *), flagButton.actions(forTarget: self, forControlEvent: .touchUpInside) == nil {
                 flagButton.addTarget(self, action: #selector(didPressFlagButton), for: .touchUpInside)
             }
         }
     }
 
+    @available(iOS 11.0, *)
     public var withDefaultPickerUI: Bool {
-        get { return _withDefaultPickerUI }
+        get { _withDefaultPickerUI }
         set { _withDefaultPickerUI = newValue }
     }
     
@@ -369,6 +372,7 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         self.attributedPlaceholder = ph
     }
 
+    @available(iOS 11.0, *)
     @objc open func didPressFlagButton() {
         guard withDefaultPickerUI else { return }
         let vc = CountryCodePickerViewController(phoneNumberKit: phoneNumberKit)
@@ -570,6 +574,7 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
     }
 }
 
+@available(iOS 11.0, *)
 extension PhoneNumberTextField: CountryCodePickerDelegate {
 
     public func countryCodePickerViewControllerDidPickCountry(_ country: CountryCodePickerViewController.Country) {
